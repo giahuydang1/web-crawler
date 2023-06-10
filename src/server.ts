@@ -17,6 +17,17 @@ mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true } a
     console.error('Error connecting to MongoDB:', error);
 });
 
+const raceResultSchema = new mongoose.Schema({
+  name: String,
+  date: String,
+  winner: String,
+  car: String,
+  laps: Number,
+  time: String
+})
+
+const RaceResult = mongoose.model('RaceResult', raceResultSchema)
+
 app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
 });
