@@ -1,4 +1,6 @@
 import express from 'express';
+import axios from 'axios';
+import cheerio from 'cheerio';
 import mongoose,  { ConnectOptions } from 'mongoose';
 
 // Define the MongoDB connection URL
@@ -27,6 +29,43 @@ const raceResultSchema = new mongoose.Schema({
 })
 
 const RaceResult = mongoose.model('RaceResult', raceResultSchema)
+
+// API crawl
+interface RaceResult {
+  name: string;
+  date: string;
+  winner: string;
+  car: string;
+  laps: number;
+  time: string;
+}
+
+app.get('/crawl', async (req, res) => {
+  try {
+    const response = await axios.get(`https://www.formula1.com/en/results.html`);
+    const $ = cheerio.load(response.data);
+    
+    const raceResults: RaceResult[] = [];
+
+    $('.resultsarchive-table > tbody > tr').each((_, table) => {
+      const raceName = $(table).find('td:nth-child(2) > a').text().trim().replace(/\s*/g,"");
+      const raceDate = $(table).find('td:nth-child(3)').text().trim();
+      const raceWinner = $(table).find('td:nth-child(4) span:nth-child(-n+2)').text().trim();
+      const raceCar = $(table).find('td:nth-child(5)').text().trim();
+      const raceLaps = parseInt($(table).find('td:nth-child(6)').text().trim());
+      const raceTime = $(table).find('td:nth-child(7)').text().trim();
+
+      raceResults.push({ name: raceName, date: raceDate, winner: raceWinner, car: raceCar, laps: raceLaps, time: raceTime });
+    });
+
+    // Save data mongodb
+    await RaceResult.insertMany(raceResults);
+    res.json({ message: 'Race results crawled and saved successfully!' });
+    
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch race results' })
+  }
+})
 
 app.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
