@@ -1,6 +1,7 @@
 import express from 'express';
 import axios from 'axios';
 import cheerio from 'cheerio';
+import { createObjectCsvWriter } from 'csv-writer';
 import mongoose,  { ConnectOptions } from 'mongoose';
 
 // Define the MongoDB connection URL
@@ -45,6 +46,17 @@ app.get('/crawl', async (req, res) => {
   try {
     const response = await axios.get(`https://www.formula1.com/en/results.html`);
     const $ = cheerio.load(response.data);
+    const csvWriter = createObjectCsvWriter({
+      path: './output.csv',
+      header: [
+          {id: "name", title: "Grand Prix"},
+          {id: "date", title: "Date"},
+          {id: "winner", title: "Winner"},
+          {id: "car", title: "Car"},
+          {id: "laps", title: "Laps"},
+          {id: "time", title: "Time"},
+      ]
+    })
     
     const raceResults: RaceResult[] = [];
 
@@ -61,6 +73,7 @@ app.get('/crawl', async (req, res) => {
 
     // Save data mongodb
     await RaceResult.insertMany(raceResults);
+    csvWriter.writeRecords(raceResults).then(() => console.log("Written to file"))
     res.json({ message: 'Race results crawled and saved successfully!' });
     
   } catch (error) {
