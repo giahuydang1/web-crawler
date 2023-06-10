@@ -19,6 +19,7 @@ mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true } a
     console.error('Error connecting to MongoDB:', error);
 });
 
+// Create Schema
 const raceResultSchema = new mongoose.Schema({
   name: String,
   date: String,
@@ -61,6 +62,18 @@ app.get('/crawl', async (req, res) => {
     // Save data mongodb
     await RaceResult.insertMany(raceResults);
     res.json({ message: 'Race results crawled and saved successfully!' });
+    
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch race results' })
+  }
+})
+
+// API results
+app.get('/results', async (req, res) => {
+  try {
+    // Save data mongodb
+    const raceResults = await RaceResult.find()
+    res.json(raceResults);
     
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch race results' })
