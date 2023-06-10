@@ -42,9 +42,10 @@ interface RaceResult {
   time: string;
 }
 
-app.get('/crawl', async (req, res) => {
+app.get('/crawl/:year', async (req, res) => {
   try {
-    const response = await axios.get(`https://www.formula1.com/en/results.html`);
+    const year = req.params.year
+    const response = await axios.get(`https://www.formula1.com/en/results.html/${year}/races.html`);
     const $ = cheerio.load(response.data);
     const csvWriter = createObjectCsvWriter({
       path: './output.csv',
