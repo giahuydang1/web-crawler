@@ -85,8 +85,25 @@ app.get('/crawl/:year', async (req, res) => {
 // API results
 app.get('/results', async (req, res) => {
   try {
-    // Save data mongodb
-    const raceResults = await RaceResult.find()
+
+    const { raceName, raceWinner, sortBy } = req.query;
+
+    const query: any = {};
+    if (raceName) {
+      query.name = raceName;
+    }
+    if (raceWinner) {
+      query.winner = raceWinner;
+    }
+
+    const sortOptions: any = {};
+    if (sortBy === 'raceLaps') {
+      sortOptions.laps = -1; //descending
+    } else if (sortBy === 'raceTime') {
+      sortOptions.time = 1; //ascending
+    }
+
+    const raceResults = await RaceResult.find(query).sort(sortOptions)
     res.json(raceResults);
     
   } catch (error) {
